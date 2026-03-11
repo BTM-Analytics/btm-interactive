@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 4: Career Outcomes by Draft Zone</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.0/plotly.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #090c11; font-family: 'DM Sans', sans-serif; color: #c9cfd8; }
+  #chart { width: 100%; max-width: 850px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div id="chart"></div>
+<script>
+var zones = ['Picks 1-15','Picks 16-30','Picks 31-60','Picks 61-90','Picks 91-150','Picks 151+'];
+var outcomes = [
+  { name:'Never played (0 GP)',   vals:[2,12,31,46,59,70], color:'#1c2333' },
+  { name:'Brief (1-99 GP)',       vals:[9,25,28,22,21,16], color:'#ef4444' },
+  { name:'Partial (100-199 GP)',  vals:[4,11,9,9,5,5],     color:'#f4a940' },
+  { name:'Established (200-399)', vals:[12,6,10,7,4,4],    color:'#e8a435' },
+  { name:'Veteran (400-699 GP)',  vals:[13,15,9,8,8,3],    color:'#00e68a' },
+  { name:'Franchise (700+ GP)',   vals:[59,31,13,8,4,3],   color:'#00d4ff' }
+];
+var isMobile = window.innerWidth < 600;
+var traces = [];
+for (var i = 0; i < outcomes.length; i++) {
+  var o = outcomes[i];
+  traces.push({
+    x: zones, y: o.vals, name: o.name, type: 'bar',
+    marker: { color: o.color, opacity: 0.85 },
+    hovertemplate: '<b>%{x}</b><br>' + o.name + ': %{y}%<extra></extra>',
+    text: o.vals.map(function(v){return v >= 8 ? v+'%' : '';}),
+    textposition: 'inside', textfont: { size: isMobile ? 7 : 9, color: '#eef1f5' }
+  });
+}
+var layout = {
+  paper_bgcolor: '#090c11', plot_bgcolor: '#0f1219',
+  font: { family: 'DM Sans, sans-serif', color: '#c9cfd8', size: isMobile ? 10 : 12 },
+  title: { text: 'What Kind of Career Does Each Draft Zone Produce?', font: { size: isMobile ? 13 : 17, color: '#eef1f5' }, y: 0.98 },
+  barmode: 'stack',
+  xaxis: { tickangle: isMobile ? -35 : 0, tickfont: { size: isMobile ? 9 : 11 }, gridcolor: '#1c2333' },
+  yaxis: { title: '% of Picks', range: [0,105], gridcolor: '#1c2333', ticksuffix: '%', tickfont: { size: isMobile ? 9 : 11 } },
+  legend: { x: isMobile ? -0.02 : 1.02, y: isMobile ? -0.25 : 0.98, bgcolor: 'rgba(15,18,25,0.9)', bordercolor: '#1c2333', borderwidth: 1, font: { size: isMobile ? 8 : 10 }, orientation: isMobile ? 'h' : 'v', traceorder: 'reversed' },
+  margin: { l: isMobile ? 40 : 55, r: isMobile ? 10 : 130, t: isMobile ? 50 : 55, b: isMobile ? 100 : 50 },
+  height: isMobile ? 480 : 500
+};
+Plotly.newPlot('chart', traces, layout, { responsive: true, displayModeBar: false });
+</script>
+</body>
+</html>

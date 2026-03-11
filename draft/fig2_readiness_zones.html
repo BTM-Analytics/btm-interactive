@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 2: Draft Probability Zones</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.0/plotly.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #090c11; font-family: 'DM Sans', sans-serif; color: #c9cfd8; }
+  #chart { width: 100%; max-width: 850px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div id="chart"></div>
+<script>
+var zones = ['Picks 1-5','Picks 6-15','Picks 16-30','Picks 31-60','Picks 61-90','Picks 91-150','Picks 151+'];
+var data = [
+  { name: 'Any NHL Game', vals: [100,96,91,68,54,39,28], color: '#5c6370' },
+  { name: '200+ GP', vals: [94,75,59,32,21,15,10], color: '#00e68a' },
+  { name: 'Top-6 Caliber', vals: [51,19,13,3,3,1,1], color: '#00d4ff' },
+  { name: 'Star (0.80+ ppg)', vals: [25,5,2,1,1,0,0], color: '#f4a940' }
+];
+var isMobile = window.innerWidth < 600;
+var traces = [];
+for (var i = 0; i < data.length; i++) {
+  var d = data[i];
+  traces.push({
+    x: zones, y: d.vals, name: d.name, type: 'bar',
+    marker: { color: d.color, opacity: 0.85 },
+    text: d.vals.map(function(v) { return v + '%'; }),
+    textposition: isMobile ? 'none' : 'outside',
+    textfont: { size: isMobile ? 8 : 10, color: '#c9cfd8' },
+    hovertemplate: '<b>%{x}</b><br>' + d.name + ': %{y}%<extra></extra>'
+  });
+}
+var layout = {
+  paper_bgcolor: '#090c11', plot_bgcolor: '#0f1219',
+  font: { family: 'DM Sans, sans-serif', color: '#c9cfd8', size: isMobile ? 10 : 12 },
+  title: { text: 'Draft Probability Zones: Career Outcome by Pick Range', font: { size: isMobile ? 13 : 17, color: '#eef1f5' }, y: 0.98 },
+  barmode: 'group',
+  xaxis: { tickangle: isMobile ? -45 : 0, tickfont: { size: isMobile ? 9 : 11 }, gridcolor: '#1c2333' },
+  yaxis: { title: 'Success Rate (%)', range: [0,108], gridcolor: '#1c2333', ticksuffix: '%', tickfont: { size: isMobile ? 9 : 11 } },
+  legend: { x: isMobile ? 0.0 : 0.55, y: isMobile ? 1.15 : 0.98, bgcolor: 'rgba(15,18,25,0.9)', bordercolor: '#1c2333', borderwidth: 1, font: { size: isMobile ? 9 : 11 }, orientation: isMobile ? 'h' : 'v' },
+  margin: { l: isMobile ? 40 : 55, r: isMobile ? 10 : 20, t: isMobile ? 70 : 60, b: isMobile ? 80 : 50 },
+  shapes: [
+    { type:'rect', x0:-0.5, x1:0.5, y0:0, y1:108, fillcolor:'rgba(0,230,138,0.05)', line:{width:0}, layer:'below' },
+    { type:'rect', x0:0.5, x1:2.5, y0:0, y1:108, fillcolor:'rgba(244,169,64,0.03)', line:{width:0}, layer:'below' },
+    { type:'rect', x0:2.5, x1:4.5, y0:0, y1:108, fillcolor:'rgba(239,68,68,0.03)', line:{width:0}, layer:'below' },
+    { type:'rect', x0:4.5, x1:6.5, y0:0, y1:108, fillcolor:'rgba(239,68,68,0.03)', line:{width:0}, layer:'below' }
+  ],
+  annotations: isMobile ? [] : [
+    { x:0, y:105, text:'<b>GREEN</b>', showarrow:false, font:{size:10,color:'#00e68a'} },
+    { x:1.5, y:105, text:'<b>YELLOW</b>', showarrow:false, font:{size:10,color:'#f4a940'} },
+    { x:3.5, y:105, text:'<b>RED</b>', showarrow:false, font:{size:10,color:'#ef4444'} },
+    { x:5.5, y:105, text:'<b>DEEP RED</b>', showarrow:false, font:{size:10,color:'#ef4444'} }
+  ]
+};
+Plotly.newPlot('chart', traces, layout, { responsive: true, displayModeBar: false });
+</script>
+</body>
+</html>

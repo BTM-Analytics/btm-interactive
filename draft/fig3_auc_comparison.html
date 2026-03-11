@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 3: AUC Comparison</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.0/plotly.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #090c11; font-family: 'DM Sans', sans-serif; color: #c9cfd8; }
+  #chart { width: 100%; max-width: 850px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div id="chart"></div>
+<script>
+var items = [
+  { name: 'NHL Draft: 200+ Career Goals', auc: 0.874, color: '#00d4ff' },
+  { name: 'NHL Draft: Star Caliber', auc: 0.864, color: '#00d4ff' },
+  { name: 'NHL Draft: 200+ Career Points', auc: 0.811, color: '#00d4ff' },
+  { name: 'NHL Draft: 400+ GP', auc: 0.777, color: '#00d4ff' },
+  { name: 'NHL Draft: 200+ GP', auc: 0.760, color: '#00e68a' },
+  { name: 'NHL Draft: 100+ GP', auc: 0.765, color: '#00e68a' },
+  { name: 'NHL Draft: Any NHL Game', auc: 0.744, color: '#00e68a' },
+  { name: 'General Cognitive Ability Test', auc: 0.740, color: '#f4a940' },
+  { name: 'Structured Job Interview', auc: 0.710, color: '#f4a940' },
+  { name: 'Typical Screening Standard', auc: 0.700, color: '#f4a940' },
+  { name: 'College GPA (job performance)', auc: 0.650, color: '#f4a940' },
+  { name: 'Reference Checks', auc: 0.570, color: '#f4a940' },
+  { name: 'Unstructured Interview', auc: 0.560, color: '#f4a940' },
+  { name: 'Random Chance', auc: 0.500, color: '#333' }
+];
+var sorted = items.slice().reverse();
+var isMobile = window.innerWidth < 600;
+var trace = {
+  y: sorted.map(function(d){return d.name;}), x: sorted.map(function(d){return d.auc;}),
+  type: 'bar', orientation: 'h',
+  marker: { color: sorted.map(function(d){return d.color;}), opacity: 0.85 },
+  text: sorted.map(function(d){return d.auc.toFixed(3);}),
+  textposition: 'outside', textfont: { size: isMobile ? 9 : 11, color: '#c9cfd8' },
+  hovertemplate: '<b>%{y}</b><br>AUC: %{x:.3f}<extra></extra>'
+};
+var layout = {
+  paper_bgcolor: '#090c11', plot_bgcolor: '#0f1219',
+  font: { family: 'DM Sans, sans-serif', color: '#c9cfd8', size: isMobile ? 9 : 12 },
+  title: { text: 'The NHL Draft vs. Occupational Screening Standards', font: { size: isMobile ? 13 : 17, color: '#eef1f5' }, y: 0.99 },
+  xaxis: { title: 'Area Under ROC Curve (AUC)', range: [0.45,0.95], gridcolor: '#1c2333', tickfont: { size: isMobile ? 9 : 11 } },
+  yaxis: { tickfont: { size: isMobile ? 8 : 10 }, automargin: true },
+  margin: { l: isMobile ? 160 : 250, r: isMobile ? 40 : 50, t: isMobile ? 45 : 55, b: isMobile ? 40 : 50 },
+  shapes: [
+    { type:'line', x0:0.5, x1:0.5, y0:-0.5, y1:sorted.length-0.5, line:{color:'#ef4444',width:1,dash:'dot'} },
+    { type:'line', x0:0.8, x1:0.8, y0:-0.5, y1:sorted.length-0.5, line:{color:'#00e68a',width:1,dash:'dot'} }
+  ],
+  annotations: [
+    { x:0.505, y:sorted.length-0.3, text:'Random', showarrow:false, font:{size:9,color:'#ef4444'}, xanchor:'left' },
+    { x:0.805, y:sorted.length-0.3, text:'Good', showarrow:false, font:{size:9,color:'#00e68a'}, xanchor:'left' }
+  ],
+  height: isMobile ? 520 : 600
+};
+Plotly.newPlot('chart', [trace], layout, { responsive: true, displayModeBar: false });
+</script>
+</body>
+</html>
