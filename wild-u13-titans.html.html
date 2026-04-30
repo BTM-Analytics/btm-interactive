@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>U13 Wild vs Titans - Player Evaluation</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card: #131a2e;
+    --card-hi: #1a2340;
+    --border: #253a5e;
+    --cyan: #00d4ff;
+    --cyan-soft: rgba(0, 212, 255, 0.15);
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --text: #e2e8f0;
+    --dim: #94a3b8;
+    --muted: #64748b;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  /* HEADER */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10, 14, 26, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .header-title { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--cyan); }
+  .header-progress { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .player-bar { display: flex; align-items: center; gap: 12px; }
+  .player-jersey {
+    background: var(--cyan-soft); color: var(--cyan); border: 1px solid var(--cyan);
+    border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: 16px;
+    font-variant-numeric: tabular-nums; min-width: 52px; text-align: center;
+  }
+  .player-name { flex: 1; font-size: 17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .player-pos {
+    font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.05); padding: 4px 8px; border-radius: 4px;
+  }
+
+  /* INTRO */
+  .intro { padding: 20px 16px 80px; max-width: 600px; margin: 0 auto; }
+  .intro h1 { font-size: 22px; margin: 8px 0 4px; letter-spacing: -0.3px; }
+  .intro h2 { font-size: 14px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 8px; font-weight: 700; }
+  .intro p { color: var(--dim); font-size: 14px; margin: 8px 0; }
+  .intro ul { color: var(--dim); font-size: 14px; padding-left: 20px; margin: 8px 0; }
+  .intro li { margin: 4px 0; }
+  .intro-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 12px 0; }
+  .start-btn {
+    background: var(--cyan); color: #051a23; border: 0; border-radius: 12px;
+    padding: 18px 24px; width: 100%; font-size: 16px; font-weight: 700;
+    margin-top: 24px; cursor: pointer; letter-spacing: 0.3px;
+  }
+  .start-btn:active { transform: scale(0.98); }
+
+  /* MAIN EVAL */
+  .eval-screen { padding: 16px 14px 120px; max-width: 600px; margin: 0 auto; }
+  .domain { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .domain-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .domain-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .domain-weight { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .domain-sub { font-size: 12px; color: var(--dim); margin-bottom: 10px; }
+
+  /* RUBRIC */
+  .rubric { background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; font-size: 12px; line-height: 1.45; }
+  .rubric-row { display: flex; gap: 8px; margin: 4px 0; }
+  .rubric-row:first-child { margin-top: 0; }
+  .rubric-row:last-child { margin-bottom: 0; }
+  .rubric-num {
+    flex-shrink: 0; width: 18px; height: 18px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 11px; font-variant-numeric: tabular-nums; margin-top: 1px;
+  }
+  .rubric-num.r1 { background: rgba(248, 113, 113, 0.2); color: var(--red); }
+  .rubric-num.r3 { background: rgba(251, 191, 36, 0.2); color: var(--amber); }
+  .rubric-num.r5 { background: rgba(52, 211, 153, 0.2); color: var(--green); }
+  .rubric-text { flex: 1; color: var(--dim); }
+  .rubric-text strong { color: var(--text); }
+
+  /* SCORES */
+  .score-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .score-btn {
+    background: rgba(255, 255, 255, 0.04); border: 1.5px solid var(--border);
+    color: var(--text); height: 52px; border-radius: 10px; font-size: 18px;
+    font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer;
+    transition: transform 0.08s, background 0.15s, border-color 0.15s;
+  }
+  .score-btn:active { transform: scale(0.95); }
+  .score-btn.selected { background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan); }
+
+  /* NOTES & FIT */
+  .notes-block, .fit-block { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .notes-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  textarea {
+    width: 100%; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px; font-family: inherit;
+    font-size: 14px; min-height: 70px; resize: vertical;
+  }
+  textarea:focus { outline: 0; border-color: var(--cyan); }
+  .fit-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+  .fit-btn {
+    background: rgba(255, 255, 255, 0.04); border: 1.5px solid var(--border);
+    color: var(--text); height: 44px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .fit-btn:active { transform: scale(0.96); }
+  .fit-btn.selected { background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan); }
+
+  /* NAV */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(10, 14, 26, 0.95); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border); padding: 10px 14px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    display: flex; gap: 8px; z-index: 50;
+  }
+  .nav-btn {
+    flex: 1; background: var(--card); color: var(--text); border: 1px solid var(--border);
+    border-radius: 10px; height: 48px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .nav-btn:active { transform: scale(0.98); }
+  .nav-btn:disabled { opacity: 0.4; }
+  .nav-btn.primary { background: var(--cyan); color: #051a23; border-color: var(--cyan); }
+
+  /* FINISH */
+  .finish { padding: 20px 16px 120px; max-width: 600px; margin: 0 auto; }
+  .finish-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 12px 0; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+  .stat { padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+  .stat-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 18px; font-weight: 700; color: var(--cyan); font-variant-numeric: tabular-nums; }
+  pre {
+    background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; font-size: 12px; color: var(--text); white-space: pre-wrap; word-break: break-word;
+    max-height: 50vh; overflow-y: auto; font-family: "SF Mono", Monaco, monospace;
+  }
+
+  /* ROSTER LIST */
+  .player-list { margin: 12px 0; }
+  .player-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 6px; cursor: pointer;
+  }
+  .player-row.done { border-left: 3px solid var(--green); }
+  .player-row.partial { border-left: 3px solid var(--amber); }
+  .player-row-label { font-size: 14px; }
+  .player-row-status { font-size: 11px; color: var(--dim); }
+
+  /* SAVE PULSE */
+  .save-pulse {
+    position: fixed; top: 12px; right: 12px;
+    background: rgba(52, 211, 153, 0.15); color: var(--green);
+    border: 1px solid var(--green); padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600; opacity: 0;
+    transition: opacity 0.3s; pointer-events: none; z-index: 100;
+  }
+  .save-pulse.show { opacity: 1; }
+
+  .pos-skater { background: rgba(0, 212, 255, 0.1); color: var(--cyan); }
+  .pos-defence { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+  .pos-goalie { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+</style>
+</head>
+<body>
+
+<div class="save-pulse" id="savePulse">Saved</div>
+
+<!-- INTRO SCREEN -->
+<div id="introScreen">
+  <div class="header">
+    <div class="header-top">
+      <span class="header-title">BTM x EO Wild</span>
+      <span class="header-progress">U13 vs Titans</span>
+    </div>
+    <div class="player-bar"><span class="player-name">Player Evaluation Form</span></div>
+  </div>
+  <div class="intro">
+    <h1>U13 Wild vs Titans</h1>
+    <p style="margin-top:4px;color:var(--dim);">Game: April 30, 2026 - 5:00 PM</p>
+
+    <div class="intro-card">
+      <h2 style="margin-top:0">For Dan</h2>
+      <p>Rate each player on the 5 NCCP development domains. Skaters use one rubric, goalies another. Add notes whenever something stands out.</p>
+      <p>The form auto-saves as you go. You can leave players partially scored if you do not see them enough. At the end, hit Export and send the result back to Martin.</p>
+    </div>
+
+    <h2>Scoring Scale (all domains)</h2>
+    <div class="intro-card">
+      <div class="rubric-row"><span class="rubric-num r1">1</span><span class="rubric-text"><strong>Lost</strong> - Well below age-appropriate</span></div>
+      <div class="rubric-row"><span class="rubric-num" style="background:rgba(255,159,64,0.18);color:#fb923c;">2</span><span class="rubric-text"><strong>Developing</strong> - Below age-appropriate</span></div>
+      <div class="rubric-row"><span class="rubric-num r3">3</span><span class="rubric-text"><strong>Solid</strong> - Meets U13 AAA expectations</span></div>
+      <div class="rubric-row"><span class="rubric-num" style="background:rgba(132,204,22,0.18);color:#84cc16;">4</span><span class="rubric-text"><strong>Strong</strong> - Above age-appropriate</span></div>
+      <div class="rubric-row"><span class="rubric-num r5">5</span><span class="rubric-text"><strong>Elite</strong> - Top tier for U13 AAA</span></div>
+    </div>
+
+    <h2>Roster (combined Apr 27, 28)</h2>
+    <p style="font-size:12px">12 forwards, 8 defence, 3 goalies. Some did not play in both games.</p>
+
+    <button class="start-btn" id="startBtn">Begin Evaluation</button>
+    <button class="start-btn" id="resumeBtn" style="background:var(--card);color:var(--cyan);border:1px solid var(--cyan);margin-top:8px;display:none;">Resume Where I Left Off</button>
+  </div>
+</div>
+
+<!-- EVAL SCREEN -->
+<div id="evalScreen" style="display:none;">
+  <div class="header">
+    <div class="header-top">
+      <span class="header-title" id="rubricMode">SKATER</span>
+      <span class="header-progress" id="progressText">1 of 23</span>
+    </div>
+    <div class="player-bar">
+      <span class="player-jersey" id="playerJersey">#69</span>
+      <span class="player-name" id="playerName">Paravan</span>
+      <span class="player-pos" id="playerPos">FWD</span>
+    </div>
+  </div>
+  <div class="eval-screen" id="evalContent"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" id="prevBtn">Previous</button>
+    <button class="nav-btn" id="rosterBtn">Roster</button>
+    <button class="nav-btn primary" id="nextBtn">Next</button>
+  </div>
+</div>
+
+<!-- ROSTER SCREEN -->
+<div id="rosterScreen" style="display:none;">
+  <div class="header">
+    <div class="header-top">
+      <span class="header-title">Roster Overview</span>
+      <span class="header-progress" id="rosterProgressText">0 of 23 done</span>
+    </div>
+    <div class="player-bar"><span class="player-name">Tap a player to evaluate</span></div>
+  </div>
+  <div class="eval-screen" id="rosterList"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" id="rosterBackBtn">Back</button>
+    <button class="nav-btn primary" id="rosterFinishBtn">Finish &amp; Export</button>
+  </div>
+</div>
+
+<!-- FINISH SCREEN -->
+<div id="finishScreen" style="display:none;">
+  <div class="header">
+    <div class="header-top">
+      <span class="header-title">Export</span>
+      <span class="header-progress" id="finishProgressText">23 of 23</span>
+    </div>
+    <div class="player-bar"><span class="player-name">Send to Martin</span></div>
+  </div>
+  <div class="finish">
+    <div class="finish-card">
+      <h2 style="margin-top:0;font-size:14px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;">Summary</h2>
+      <div class="summary-grid" id="summaryGrid"></div>
+    </div>
+    <div class="finish-card">
+      <h2 style="margin-top:0;font-size:14px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;">Send This Back</h2>
+      <p style="font-size:13px;color:var(--dim);margin-top:0;">Tap Copy, then paste into a text or email to Martin.</p>
+      <button class="start-btn" id="copyBtn" style="margin-bottom:10px;">Copy Results</button>
+      <button class="start-btn" id="emailBtn" style="background:var(--card);color:var(--cyan);border:1px solid var(--cyan);margin-bottom:10px;">Open in Email</button>
+      <pre id="exportText"></pre>
+    </div>
+    <div class="finish-card">
+      <h2 style="margin-top:0;font-size:14px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;">Reset</h2>
+      <p style="font-size:13px;color:var(--dim);margin-top:0;">Only use this if Martin asks you to start over.</p>
+      <button class="start-btn" id="resetBtn" style="background:transparent;color:var(--red);border:1px solid var(--red);">Clear All Data</button>
+    </div>
+    <div class="nav-bar">
+      <button class="nav-btn" id="finishBackBtn">Back to Roster</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ROSTER (combined from Apr 27 vs Cyclones + Apr 28 vs Myers)
+// ============================================================
+const ROSTER = [
+  // Forwards
+  { num: "69", name: "Paravan", pos: "FWD" },
+  { num: "18", name: "Leclair", pos: "FWD" },
+  { num: "76", name: "Burd", pos: "FWD" },
+  { num: "81", name: "Bergeron", pos: "FWD" },
+  { num: "68", name: "Safarian", pos: "FWD" },
+  { num: "6",  name: "Toste", pos: "FWD" },
+  { num: "4",  name: "Dupuis", pos: "FWD" },
+  { num: "66", name: "Caya", pos: "FWD" },
+  { num: "70", name: "Pascoe", pos: "FWD" },
+  { num: "17", name: "Albright", pos: "FWD" },
+  { num: "23", name: "Marsolais", pos: "FWD" },
+  { num: "30", name: "Scarfone", pos: "FWD" },
+  // Defence
+  { num: "74", name: "Breton", pos: "DEF" },
+  { num: "79", name: "van der Heyden", pos: "DEF" },
+  { num: "28", name: "St-Martin", pos: "DEF" },
+  { num: "77", name: "Germain", pos: "DEF" },
+  { num: "64", name: "Fetch", pos: "DEF" },
+  { num: "3",  name: "Perry", pos: "DEF" },
+  { num: "20", name: "Edwards", pos: "DEF" },
+  { num: "80", name: "Longtin", pos: "DEF" },
+  // Goalies
+  { num: "32", name: "Williamson", pos: "G" },
+  { num: "49", name: "Maalouli", pos: "G" },
+  { num: "21", name: "Lamothe", pos: "G" }
+];
+
+// ============================================================
+// RUBRICS - NCCP-aligned, anchored at 1, 3, 5
+// ============================================================
+const SKATER_DOMAINS = [
+  {
+    id: "hockey_sense", name: "Hockey Sense",
+    sub: "Reads, decisions, anticipation", weight: 2,
+    anchors: {
+      "1": "Frequently misreads plays. Late or absent reactions. No apparent plan with or without the puck.",
+      "3": "Reads developing plays in real time. Makes the simple correct play under pressure. Basic anticipation in familiar patterns.",
+      "5": "Anticipates plays before they develop. Scans repeatedly. Finds open ice early. Supports teammates without being told."
+    }
+  },
+  {
+    id: "skating", name: "Skating",
+    sub: "Speed, agility, edges, balance", weight: 1.5,
+    anchors: {
+      "1": "Inefficient stride. Struggles with edges and crossovers. Balance fails under contact.",
+      "3": "Smooth forward and backward stride. Controlled crossovers both directions. Recovers from contact. Age-appropriate top speed.",
+      "5": "Explosive first 3 strides. Deep edge work. Agility under pressure. Visible separation speed vs peers."
+    }
+  },
+  {
+    id: "skills", name: "Skills",
+    sub: "Puck handling, passing, shooting", weight: 1.5,
+    anchors: {
+      "1": "Loses control under pressure. Telegraphs passes. No shot variety or accuracy.",
+      "3": "Protects puck through traffic. Completes simple passes both forehand and backhand. Accurate wrist shot.",
+      "5": "Manipulates puck under pressure. Hard accurate passes through lanes. Shoots in stride. Pre-scans before receiving."
+    }
+  },
+  {
+    id: "compete", name: "Compete",
+    sub: "Effort, battles, intensity, willingness", weight: 1.5,
+    anchors: {
+      "1": "Avoids contact and battles. Drifts on backcheck. Gives up on plays.",
+      "3": "Engages in puck battles. Finishes checks legally. Full effort backchecks.",
+      "5": "Wins more battles than loses. Drives offence and pressures defensively every shift. Leads by example."
+    }
+  },
+  {
+    id: "coachability", name: "Coachability",
+    sub: "Listens, adapts, attitude", weight: 0.5,
+    anchors: {
+      "1": "Tunes out instructions. Repeats same mistakes. Body language sinks after errors.",
+      "3": "Listens on the bench. Responds to coaching adjustments within a game. Neutral body language after mistakes.",
+      "5": "Implements feedback immediately. Asks questions. Supports teammates verbally. Resilient after errors."
+    }
+  }
+];
+
+const GOALIE_DOMAINS = [
+  {
+    id: "positioning", name: "Positioning",
+    sub: "Angles, depth, squareness, post integration", weight: 2,
+    anchors: {
+      "1": "Often out of position on simple shots. Depth is inconsistent. Post coverage breaks down.",
+      "3": "Square to puck on direct shots. Age-appropriate depth. Basic VH or RVH on plays below the goal line.",
+      "5": "Anticipatory pre-positioning. Smooth angle adjustments mid-play. Clean post integration. Depth matches threat level."
+    }
+  },
+  {
+    id: "reflexes", name: "Reflexes",
+    sub: "Reaction speed, hand speed, pad saves, desperation saves", weight: 1.5,
+    anchors: {
+      "1": "Slow to react on tracked shots. Hands locked low. No recovery push on second chances.",
+      "3": "Reacts to tracked shots in time. Glove and blocker active. Pad saves controlled.",
+      "5": "Quick reads on tipped or screened shots. Glove and blocker shot stops. Desperation saves on broken plays."
+    }
+  },
+  {
+    id: "rebound_control", name: "Rebound Control",
+    sub: "Directing rebounds, smothering, second save", weight: 1.5,
+    anchors: {
+      "1": "Pucks die in front. No awareness of rebound destination. Second save absent.",
+      "3": "Smothers most low-danger shots. Directs rebounds to corners on body shots. Second save on standard rebounds.",
+      "5": "Intentional rebound placement (corners or covered). Zero second-chance pucks left in the slot. Recovery push to next shot location."
+    }
+  },
+  {
+    id: "hockey_sense", name: "Hockey Sense",
+    sub: "Play reading, puck tracking, communication, breakaway reads", weight: 1.5,
+    anchors: {
+      "1": "Loses puck through traffic. No communication with defenders. Breakaways result from poor reads of approach.",
+      "3": "Tracks puck through screens. Basic communication on D-zone faceoffs. Patient on breakaways.",
+      "5": "Anticipates passes pre-release. Directs defensemen on coverage. Reads shooter intent on breakaways. Calm under odd-man situations."
+    }
+  },
+  {
+    id: "compete", name: "Compete",
+    sub: "Battles, recovery, composure after goals", weight: 0.5,
+    anchors: {
+      "1": "Body language collapses after goals. Gives up on rebounds. No second effort.",
+      "3": "Composed reset after goals. Second effort on most rebounds. Solid effort full game.",
+      "5": "Resets within seconds after a goal. Every puck contested with second and third effort. Engaged voice through full game."
+    }
+  }
+];
+
+const FIT_OPTIONS = ["Top of roster", "Solid roster", "Bubble", "Did not see enough"];
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = "btm_u13_titans_eval_v1";
+let state = {
+  currentIdx: 0,
+  evaluations: {},
+  customPlayers: [],
+  startedAt: null
+};
+
+function getRoster() { return ROSTER.concat(state.customPlayers || []); }
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      state = JSON.parse(saved);
+      if (!state.customPlayers) state.customPlayers = [];
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    pulseSave();
+  } catch (e) { console.error("Save failed", e); }
+}
+
+function pulseSave() {
+  const el = document.getElementById("savePulse");
+  el.classList.add("show");
+  clearTimeout(window._pulseTimer);
+  window._pulseTimer = setTimeout(() => el.classList.remove("show"), 800);
+}
+
+function getEval(jersey) {
+  if (!state.evaluations[jersey]) {
+    state.evaluations[jersey] = { scores: {}, notes: "", fit: null };
+  }
+  return state.evaluations[jersey];
+}
+
+function getCompletion(jersey) {
+  const ev = state.evaluations[jersey];
+  if (!ev) return "none";
+  const player = getRoster().find(p => p.num === jersey);
+  if (!player) return "none";
+  const domains = player.pos === "G" ? GOALIE_DOMAINS : SKATER_DOMAINS;
+  const filled = domains.filter(d => ev.scores[d.id] != null).length;
+  if (filled === 0) return "none";
+  if (filled === domains.length) return "done";
+  return "partial";
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function showScreen(id) {
+  ["introScreen", "evalScreen", "rosterScreen", "finishScreen"].forEach(s => {
+    document.getElementById(s).style.display = s === id ? "block" : "none";
+  });
+  window.scrollTo(0, 0);
+}
+
+function escHtml(s) {
+  return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function renderEval() {
+  const roster = getRoster();
+  const player = roster[state.currentIdx];
+  const isGoalie = player.pos === "G";
+  const domains = isGoalie ? GOALIE_DOMAINS : SKATER_DOMAINS;
+  const ev = getEval(player.num);
+
+  document.getElementById("playerJersey").textContent = "#" + player.num;
+  document.getElementById("playerName").textContent = player.name + (player.custom ? " *" : "");
+  const posLabel = player.pos === "G" ? "GOALIE" : (player.pos === "DEF" ? "DEFENCE" : "FORWARD");
+  const posClass = player.pos === "G" ? "pos-goalie" : (player.pos === "DEF" ? "pos-defence" : "pos-skater");
+  const posEl = document.getElementById("playerPos");
+  posEl.textContent = posLabel;
+  posEl.className = "player-pos " + posClass;
+  document.getElementById("rubricMode").textContent = isGoalie ? "GOALIE RUBRIC" : "SKATER RUBRIC";
+  document.getElementById("progressText").textContent = (state.currentIdx + 1) + " of " + roster.length;
+
+  const content = document.getElementById("evalContent");
+  content.innerHTML = "";
+
+  domains.forEach(d => {
+    const block = document.createElement("div");
+    block.className = "domain";
+    const w = d.weight;
+    block.innerHTML =
+      '<div class="domain-header">' +
+        '<span class="domain-name">' + escHtml(d.name) + '</span>' +
+        '<span class="domain-weight">weight x' + w + '</span>' +
+      '</div>' +
+      '<div class="domain-sub">' + escHtml(d.sub) + '</div>' +
+      '<div class="rubric">' +
+        '<div class="rubric-row"><span class="rubric-num r1">1</span><span class="rubric-text">' + escHtml(d.anchors["1"]) + '</span></div>' +
+        '<div class="rubric-row"><span class="rubric-num r3">3</span><span class="rubric-text">' + escHtml(d.anchors["3"]) + '</span></div>' +
+        '<div class="rubric-row"><span class="rubric-num r5">5</span><span class="rubric-text">' + escHtml(d.anchors["5"]) + '</span></div>' +
+      '</div>' +
+      '<div class="score-row">' +
+        [1,2,3,4,5].map(n => '<button class="score-btn ' + (ev.scores[d.id] === n ? 'selected' : '') + '" data-domain="' + d.id + '" data-score="' + n + '">' + n + '</button>').join("") +
+      '</div>';
+    content.appendChild(block);
+  });
+
+  const notes = document.createElement("div");
+  notes.className = "notes-block";
+  notes.innerHTML =
+    '<div class="notes-label">Notes (optional)</div>' +
+    '<textarea id="notesField" placeholder="Standout moments, body language, lines played, anything you saw...">' + escHtml(ev.notes || "") + '</textarea>';
+  content.appendChild(notes);
+
+  const fit = document.createElement("div");
+  fit.className = "fit-block";
+  fit.innerHTML =
+    '<div class="notes-label">Roster Fit (optional)</div>' +
+    '<div class="fit-options">' +
+      FIT_OPTIONS.map(opt => '<button class="fit-btn ' + (ev.fit === opt ? 'selected' : '') + '" data-fit="' + escHtml(opt) + '">' + escHtml(opt) + '</button>').join("") +
+    '</div>';
+  content.appendChild(fit);
+
+  content.querySelectorAll(".score-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const domain = btn.dataset.domain;
+      const score = parseInt(btn.dataset.score);
+      ev.scores[domain] = score;
+      saveState();
+      content.querySelectorAll('.score-btn[data-domain="' + domain + '"]').forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+    });
+  });
+
+  document.getElementById("notesField").addEventListener("input", (e) => {
+    ev.notes = e.target.value;
+    saveState();
+  });
+
+  content.querySelectorAll(".fit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const f = btn.dataset.fit;
+      ev.fit = ev.fit === f ? null : f;
+      saveState();
+      content.querySelectorAll(".fit-btn").forEach(b => b.classList.remove("selected"));
+      if (ev.fit === f) btn.classList.add("selected");
+    });
+  });
+
+  document.getElementById("prevBtn").disabled = state.currentIdx === 0;
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.textContent = state.currentIdx === roster.length - 1 ? "Roster" : "Next";
+}
+
+function renderRoster() {
+  const list = document.getElementById("rosterList");
+  list.innerHTML = "";
+  const roster = getRoster();
+  let doneCount = 0;
+
+  const addCard = document.createElement("div");
+  addCard.style.cssText = "background:var(--card);border:1px dashed var(--cyan);border-radius:10px;padding:14px;margin-bottom:14px;";
+  addCard.innerHTML =
+    '<div style="font-size:13px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Add Player Not on Roster</div>' +
+    '<div style="font-size:12px;color:var(--dim);margin-bottom:10px;">If a kid is on the ice tonight who was not on the Apr 27 or 28 lineup, add them here.</div>' +
+    '<div id="addPlayerForm" style="display:none;">' +
+      '<div style="display:grid;grid-template-columns:90px 1fr;gap:8px;margin-bottom:8px;">' +
+        '<input id="newJersey" type="text" inputmode="numeric" placeholder="#" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:15px;font-weight:700;text-align:center;">' +
+        '<input id="newName" type="text" placeholder="Last name" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:15px;">' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;">' +
+        '<button class="fit-btn" data-newpos="FWD">Forward</button>' +
+        '<button class="fit-btn" data-newpos="DEF">Defence</button>' +
+        '<button class="fit-btn" data-newpos="G">Goalie</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button class="nav-btn" id="addCancel" style="flex:1;height:42px;">Cancel</button>' +
+        '<button class="nav-btn primary" id="addConfirm" style="flex:1;height:42px;">Add &amp; Evaluate</button>' +
+      '</div>' +
+    '</div>' +
+    '<button class="nav-btn primary" id="addPlayerOpen" style="width:100%;height:44px;">+ Add Player</button>';
+  list.appendChild(addCard);
+
+  roster.forEach((p, i) => {
+    const status = getCompletion(p.num);
+    if (status === "done") doneCount++;
+    const row = document.createElement("div");
+    row.className = "player-row" + (status === "done" ? " done" : status === "partial" ? " partial" : "");
+    const customBadge = p.custom ? '<span style="color:var(--cyan);font-size:10px;margin-left:6px;">added</span>' : '';
+    row.innerHTML =
+      '<span class="player-row-label">#' + escHtml(p.num) + ' ' + escHtml(p.name) + ' <span style="color:var(--dim);font-size:11px;margin-left:6px;">' + escHtml(p.pos) + '</span>' + customBadge + '</span>' +
+      '<span class="player-row-status">' + (status === "done" ? "Complete" : status === "partial" ? "In progress" : "Not started") + '</span>';
+    row.addEventListener("click", () => {
+      state.currentIdx = i;
+      saveState();
+      showScreen("evalScreen");
+      renderEval();
+    });
+    list.appendChild(row);
+  });
+  document.getElementById("rosterProgressText").textContent = doneCount + " of " + roster.length + " done";
+
+  // Add Player flow
+  let pendingPos = null;
+  document.getElementById("addPlayerOpen").addEventListener("click", () => {
+    document.getElementById("addPlayerOpen").style.display = "none";
+    document.getElementById("addPlayerForm").style.display = "block";
+    document.getElementById("newJersey").focus();
+  });
+  document.getElementById("addCancel").addEventListener("click", () => {
+    document.getElementById("addPlayerForm").style.display = "none";
+    document.getElementById("addPlayerOpen").style.display = "block";
+    document.getElementById("newJersey").value = "";
+    document.getElementById("newName").value = "";
+    pendingPos = null;
+  });
+  addCard.querySelectorAll("[data-newpos]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      pendingPos = btn.dataset.newpos;
+      addCard.querySelectorAll("[data-newpos]").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+    });
+  });
+  document.getElementById("addConfirm").addEventListener("click", () => {
+    const num = document.getElementById("newJersey").value.trim();
+    const name = document.getElementById("newName").value.trim();
+    if (!num) { alert("Need a jersey number."); return; }
+    if (!name) { alert("Need a last name."); return; }
+    if (!pendingPos) { alert("Pick a position."); return; }
+    if (getRoster().some(p => p.num === num)) { alert("Jersey #" + num + " already on the roster."); return; }
+    state.customPlayers.push({ num: num, name: name, pos: pendingPos, custom: true });
+    saveState();
+    state.currentIdx = getRoster().length - 1;
+    saveState();
+    showScreen("evalScreen");
+    renderEval();
+  });
+}
+
+function renderFinish() {
+  let lines = [];
+  lines.push("==================================================");
+  lines.push("U13 WILD vs TITANS - PLAYER EVALUATION");
+  lines.push("Game: April 30, 2026 - 5:00 PM");
+  lines.push("Evaluator: Daniel Theoret");
+  lines.push("Generated: " + new Date().toLocaleString("en-CA"));
+  lines.push("==================================================");
+  lines.push("");
+
+  let totalScored = 0, totalSkaters = 0, totalGoalies = 0, skaterAvgSum = 0, goalieAvgSum = 0;
+  const roster = getRoster();
+  const groups = [
+    { label: "FORWARDS", filter: p => p.pos === "FWD", domains: SKATER_DOMAINS },
+    { label: "DEFENCE",  filter: p => p.pos === "DEF", domains: SKATER_DOMAINS },
+    { label: "GOALIES",  filter: p => p.pos === "G",   domains: GOALIE_DOMAINS }
+  ];
+
+  groups.forEach(g => {
+    const groupPlayers = roster.filter(g.filter);
+    if (groupPlayers.length === 0) return;
+    lines.push("--- " + g.label + " ---");
+    lines.push("");
+    groupPlayers.forEach(p => {
+      const ev = state.evaluations[p.num];
+      const tag = p.custom ? " [added at game]" : "";
+      lines.push("#" + p.num + " " + p.name + tag);
+      if (!ev || Object.keys(ev.scores || {}).length === 0) {
+        lines.push("  (not evaluated)");
+        lines.push("");
+        return;
+      }
+      totalScored++;
+      let weighted = 0, totalW = 0;
+      g.domains.forEach(d => {
+        const s = ev.scores[d.id];
+        const sStr = s != null ? s.toString() : "-";
+        lines.push("  " + d.name.padEnd(18) + ": " + sStr);
+        if (s != null) { weighted += s * d.weight; totalW += d.weight; }
+      });
+      if (totalW > 0) {
+        const composite = (weighted / totalW).toFixed(2);
+        lines.push("  COMPOSITE         : " + composite + " / 5.00");
+        if (g.label === "GOALIES") { totalGoalies++; goalieAvgSum += parseFloat(composite); }
+        else { totalSkaters++; skaterAvgSum += parseFloat(composite); }
+      }
+      if (ev.fit) lines.push("  Roster fit        : " + ev.fit);
+      if (ev.notes && ev.notes.trim()) {
+        lines.push("  Notes:");
+        ev.notes.trim().split("\n").forEach(ln => lines.push("    " + ln));
+      }
+      lines.push("");
+    });
+  });
+
+  lines.push("==================================================");
+  lines.push("SUMMARY");
+  lines.push("Players evaluated: " + totalScored + " of " + roster.length);
+  if (state.customPlayers.length > 0) {
+    lines.push("Players added at game: " + state.customPlayers.map(p => "#" + p.num + " " + p.name).join(", "));
+  }
+  if (totalSkaters > 0) lines.push("Skater avg composite: " + (skaterAvgSum / totalSkaters).toFixed(2));
+  if (totalGoalies > 0) lines.push("Goalie avg composite: " + (goalieAvgSum / totalGoalies).toFixed(2));
+  lines.push("==================================================");
+
+  const text = lines.join("\n");
+  document.getElementById("exportText").textContent = text;
+  window._exportText = text;
+
+  const grid = document.getElementById("summaryGrid");
+  grid.innerHTML =
+    '<div class="stat"><div class="stat-label">Evaluated</div><div class="stat-value">' + totalScored + ' / ' + roster.length + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Skater Avg</div><div class="stat-value">' + (totalSkaters ? (skaterAvgSum/totalSkaters).toFixed(2) : "-") + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Goalie Avg</div><div class="stat-value">' + (totalGoalies ? (goalieAvgSum/totalGoalies).toFixed(2) : "-") + '</div></div>' +
+    '<div class="stat"><div class="stat-label">Started</div><div class="stat-value" style="font-size:13px;">' + (state.startedAt ? new Date(state.startedAt).toLocaleTimeString("en-CA", {hour:"2-digit",minute:"2-digit"}) : "-") + '</div></div>';
+
+  document.getElementById("finishProgressText").textContent = totalScored + " of " + roster.length;
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+document.getElementById("startBtn").addEventListener("click", () => {
+  if (!state.startedAt) state.startedAt = Date.now();
+  saveState();
+  showScreen("evalScreen");
+  renderEval();
+});
+
+document.getElementById("resumeBtn").addEventListener("click", () => {
+  showScreen("evalScreen");
+  renderEval();
+});
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  if (state.currentIdx > 0) {
+    state.currentIdx = state.currentIdx - 1;
+    saveState();
+    renderEval();
+  }
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+  if (state.currentIdx < getRoster().length - 1) {
+    state.currentIdx = state.currentIdx + 1;
+    saveState();
+    renderEval();
+  } else {
+    renderRoster();
+    showScreen("rosterScreen");
+  }
+});
+
+document.getElementById("rosterBtn").addEventListener("click", () => {
+  renderRoster();
+  showScreen("rosterScreen");
+});
+
+document.getElementById("rosterBackBtn").addEventListener("click", () => {
+  showScreen("evalScreen");
+  renderEval();
+});
+
+document.getElementById("rosterFinishBtn").addEventListener("click", () => {
+  renderFinish();
+  showScreen("finishScreen");
+});
+
+document.getElementById("finishBackBtn").addEventListener("click", () => {
+  renderRoster();
+  showScreen("rosterScreen");
+});
+
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(window._exportText);
+    const btn = document.getElementById("copyBtn");
+    const orig = btn.textContent;
+    btn.textContent = "Copied to clipboard";
+    btn.style.background = "var(--green)";
+    setTimeout(() => { btn.textContent = orig; btn.style.background = "var(--cyan)"; }, 1500);
+  } catch (e) {
+    alert("Copy failed. Long-press the text below and copy manually.");
+  }
+});
+
+document.getElementById("emailBtn").addEventListener("click", () => {
+  const subject = encodeURIComponent("U13 Wild vs Titans - Player Evaluation - " + new Date().toLocaleDateString("en-CA"));
+  const body = encodeURIComponent(window._exportText);
+  window.location.href = "mailto:mpoirier@btmanalytics.com?subject=" + subject + "&body=" + body;
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Clear all evaluations? This cannot be undone.")) {
+    localStorage.removeItem(STORAGE_KEY);
+    state = { currentIdx: 0, evaluations: {}, customPlayers: [], startedAt: null };
+    showScreen("introScreen");
+    document.getElementById("resumeBtn").style.display = "none";
+  }
+});
+
+// INIT
+if (loadState() && Object.keys(state.evaluations).length > 0) {
+  document.getElementById("resumeBtn").style.display = "block";
+}
+</script>
+</body>
+</html>
